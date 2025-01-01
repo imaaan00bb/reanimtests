@@ -1,222 +1,120 @@
-r = math.rad
-limbs = {
-    ["Left Arm"] = {"Extra Left hand (Blocky)_white",CFrame.Angles(0,0,r(90))},
-    ["Right Arm"] = {"Extra Right hand (Blocky)_white",CFrame.Angles(0,0,r(90))},
-    ["Right Leg"] = {"MeshPartAccessory",CFrame.Angles(0,0,r(90))},
-    ["Left Leg"] = {"Unloaded head",CFrame.Angles(0,0,r(90))},
-    ["Torso"] = {"Front",CFrame.new(0,0,0)},
-    ["Head"] = {"Face Behind Head_white",CFrame.new(0,0,0)},
-}
+local genv = (getgenv and getgenv()) or _G
+if not genv.fpdh then
+    genv.fpdh = workspace.FallenPartsDestroyHeight
+end
 
-players = game:GetService("Players")
-p = players.LocalPlayer
-local FakeCharacter
-local function Align(Part1, Part0, CFrameOffset)
-    local c = game:GetService("RunService").PostSimulation:Connect(function()
-        Part1.CFrame = Part0.CFrame * CFrameOffset
-    end)
-    Part1.Destroying:Connect(function()
-        c:Disconnect()
-    end)
-    Part0.Destroying:Connect(function()
-        c:Disconnect()
+local fpdh = genv.fpdh or workspace.FallenPartsDestroyHeight
+local rs = game:GetService("RunService")
+local lp = game:GetService("Players").LocalPlayer
+local char = lp.Character or lp.CharacterAdded:Wait()
+local hum = char:WaitForChild("Humanoid")
+local hrp = char:WaitForChild("HumanoidRootPart")
+local head = char:WaitForChild("Head")
+local faceAccessory = char:FindFirstChild("Face Behind Head_white")  -- Assuming this is the accessory name
+if not (hum and hrp and head and faceAccessory) then return end
+
+local oldPos = hrp.CFrame
+local isR6 = hum.RigType == Enum.HumanoidRigType.R6
+local newPos = CFrame.new(hrp.CFrame.Position.X, fpdh + 1, hrp.CFrame.Position.Z) 
+if isR6 then newPos *= CFrame.Angles(math.rad(90), 0, 0) end
+
+local function removeVelocity(instance)
+    local instance = instance or lp.Character
+    local part = instance:IsA("BasePart") and instance or instance:IsA("Model") and (instance.PrimaryPart or instance:FindFirstChildOfClass("BasePart"))
+    if not part then return end
+
+    part.AssemblyAngularVelocity = Vector3.new()
+    part.AssemblyLinearVelocity = Vector3.new()
+
+    for i, v in part:GetConnectedParts(true) do
+        v.AssemblyAngularVelocity = Vector3.new()
+        v.AssemblyLinearVelocity = Vector3.new()
+    end
+end
+
+local function positionAccessoryBehindHead()
+    -- Assuming the accessory is an object like a hat or face accessory with a "Handle"
+    local handle = faceAccessory:FindFirstChild("Handle")
+    if handle then
+        -- Position the accessory behind the head
+        handle.CFrame = head.CFrame * CFrame.new(0, 0, -2)  -- Adjust the offset as needed
+    end
+end
+
+local function createFlinger(hat)
+    local handle = hat:FindFirstChild("Handle")
+    local weld = handle and handle:FindFirstChildOfClass("Weld")
+    if not weld then return end
+
+    sethiddenproperty(hat, "BackendAccoutrementState", 0)
+
+    local box = Instance.new("SelectionBox")
+    box.Adornee = handle
+    box.Parent = handle
+
+    handle:BreakJoints()
+    handle.AssemblyLinearVelocity = Vector3.new(0, 30, 0)
+    handle.CFrame = CFrame.new(oldPos.Position) * CFrame.new(0, 0, 0)
+        
+    local alignCon
+    alignCon = rs.PostSimulation:Connect(function()
+        handle.AssemblyLinearVelocity = Vector3.new(0, 30, 0)
+        handle.AssemblyAngularVelocity = Vector3.new(9e9, 0, 9e9)
+        handle.Position = oldPos.Position + Vector3.new(0, handle.Size.Y / 2 - 5, 0)
     end)
 end
 
-function hatdrop(c)
-    for i, v in pairs(c.Humanoid:GetPlayingAnimationTracks()) do
-        v:Stop()
+char.DescendantRemoving:Connect(function(v)
+    if not v:IsA("BasePart") then return end
+    if v.Name == "Handle" then 
+        return warn(`accessory lost ({v.Parent.Name})`)
     end
+    print(v.Name)
+end)
+
+if isR6 then
     local anim = Instance.new("Animation")
     anim.AnimationId = "rbxassetid://35154961"
-    local loadanim = c.Humanoid:LoadAnimation(anim)
-    loadanim:Play()
-    loadanim.TimePosition = 3
-    loadanim:AdjustSpeed(0)
-    local a = c.HumanoidRootPart.CFrame
-    for i, v in c.Humanoid:GetAccessories() do
-        sethiddenproperty(v, "BackendAccoutrementState", 0)
-        task.delay(1.95, function()
-            local con = game:GetService("RunService").PostSimulation:Connect(function(dt)
-                if v.Handle then
-                    v.Handle.AssemblyLinearVelocity = Vector3.new(15, 15, 15)
-                end
-            end)
-            v.Handle.Destroying:Connect(function()
-                con:Disconnect()
-                -- Ensure reparenting the hats to the FakeCharacter
-                if v.Parent == nil then
-                    v.Parent = FakeCharacter
-                    v.Handle.CanCollide = false
-                end
-            end)
-        end)
-    end
-    wait(0.5)
-    c.HumanoidRootPart.CFrame *= CFrame.Angles(math.rad(90), 0, 0)
-    c.Humanoid:ChangeState(Enum.HumanoidStateType.Physics)
-    game:GetService("TweenService"):Create(c.HumanoidRootPart, TweenInfo.new(2, Enum.EasingStyle.Linear), {CFrame = CFrame.new(a.X, -499, a.Z) * CFrame.Angles(math.rad(90), 0, 0)}):Play()
-    print(".")
-    c.ChildRemoved:Connect(function(v)
-        if v:IsA("BasePart") then
-            print(v.Name)
-        end
-    end)
-    coroutine.wrap(function()
-        while true do
-            game:GetService("RunService").PostSimulation:Wait()
-            c.HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero
-            c.HumanoidRootPart.AssemblyAngularVelocity = Vector3.zero
-        end
-    end)()
-    task.wait(1.95)
-    c.Humanoid.Health = 0
+    local loadanim = hum:LoadAnimation(anim)
+    loadanim:Play(0, 100, 0)
+    loadanim.TimePosition = 3.24
 end
 
-p.Character.Archivable = true
-FakeCharacter = p.Character:Clone()
-for i, v in ipairs(FakeCharacter:GetDescendants()) do
-    if v:IsA("BasePart") then
-        v.Transparency = 1
-    end
-end
-FakeCharacter.Parent = workspace
-workspace.Camera.CameraSubject = FakeCharacter.Humanoid
-game:GetService("RunService").Heartbeat:connect(function()
-    for i, v in pairs(game:GetService("Players").LocalPlayer.Character:GetDescendants()) do
-        if v.Name == "Handle" then
-            v.Velocity = Vector3.new(999, 999, 999)
-        end
-    end
-end)
-game:GetService("RunService").PostSimulation:Connect(function()
-    for i, v in ipairs(FakeCharacter:GetDescendants()) do
-        if v:IsA("BasePart") then
-            v.CanCollide = false
-        end
-    end
-end)
-game:GetService("RunService").PostSimulation:Connect(function()
-    if limbs["Left Leg"][1] then
-        p.Character[limbs["Left Leg"][1]].Handle.CanCollide = false
-    end
-    if limbs["Right Leg"][1] then
-        p.Character[limbs["Right Leg"][1]].Handle.CanCollide = false
-    end
-end)
-game:GetService("RunService").Heartbeat:Connect(function()
-    for i, v in ipairs(FakeCharacter:GetDescendants()) do
-        if v:IsA("BasePart") then
-            v.CanCollide = false
-        end
-    end
-end)
-hatdrop(p.Character)
-task.wait(0.2)
-for i, v in pairs(limbs) do
-    local name, cf = unpack(v)
-    if name == "" then continue end
-    coroutine.wrap(function()
-        local a = p.Character:WaitForChild(name)
-        local s, e = pcall(function()
-            Align(a.Handle, FakeCharacter[i], cf)
-        end)
-        if not s then print(e) end
-    end)()
-end
-FakeCharacter.Parent = workspace
-local LVecPart = Instance.new("Part", workspace)
-LVecPart.CanCollide = false
-LVecPart.Transparency = 1
-local walk = Instance.new("Animation", FakeCharacter)
-walk.AnimationId = "http://www.roblox.com/asset/?id=180426354"
-local walka = FakeCharacter.Humanoid:LoadAnimation(walk)
-local jump = Instance.new("Animation", FakeCharacter)
-jump.AnimationId = "http://www.roblox.com/asset/?id=125750702"
-local jumpa = FakeCharacter.Humanoid:LoadAnimation(jump)
-local CONVEC
-local function VECTORUNIT()
-    if HumanDied then CONVEC:Disconnect(); return end
-    local lookVec = workspace.Camera.CFrame.lookVector
-    local Root = FakeCharacter["HumanoidRootPart"]
-    LVecPart.Position = Root.Position
-    LVecPart.CFrame = CFrame.new(LVecPart.Position, Vector3.new(lookVec.X * 9999, lookVec.Y, lookVec.Z * 9999))
-end
-CONVEC = game:GetService("RunService").Heartbeat:Connect(VECTORUNIT)
-local CONDOWN
-local WDown, ADown, SDown, DDown, SpaceDown = false, false, false, false, false
-local function KEYDOWN(_, Processed)
-    if HumanDied then CONDOWN:Disconnect(); return end
-    if Processed ~= true then
-        local Key = _.KeyCode
-        if Key == Enum.KeyCode.W then
-            WDown = true end
-        if Key == Enum.KeyCode.A then
-            ADown = true end
-        if Key == Enum.KeyCode.S then
-            SDown = true end
-        if Key == Enum.KeyCode.D then
-            DDown = true end
-        if Key == Enum.KeyCode.Space then
-            SpaceDown = true
-        end
-    end
-end
-CONDOWN = game:GetService("UserInputService").InputBegan:Connect(KEYDOWN)
+workspace.FallenPartsDestroyHeight = 0 / 0
+removeVelocity(hrp)
+hrp.CFrame = newPos
 
-local CONUP
-local function KEYUP(_)
-    if HumanDied then CONUP:Disconnect(); return end
-    local Key = _.KeyCode
-    if Key == Enum.KeyCode.W then
-        WDown = false end
-    if Key == Enum.KeyCode.A then
-        ADown = false end
-    if Key == Enum.KeyCode.S then
-        SDown = false end
-    if Key == Enum.KeyCode.D then
-        DDown = false end
-    if Key == Enum.KeyCode.Space then
-        SpaceDown = false end
-end
-CONUP = game:GetService("UserInputService").InputEnded:Connect(KEYUP)
+-- Position the "Face Behind Head_white" accessory behind the character's head
+positionAccessoryBehindHead()
 
-local function MoveClone(X, Y, Z)
-    LVecPart.CFrame = LVecPart.CFrame * CFrame.new(-X, Y, -Z)
-    FakeCharacter.Humanoid.WalkToPoint = LVecPart.Position
+-- Create a fake character
+local fakeChar = char:Clone()
+fakeChar.Parent = workspace
+fakeChar:MakeJoints()
+
+-- Disable movement for the fake character to make it appear as if it's not moving
+local fakeHum = fakeChar:FindFirstChild("Humanoid")
+if fakeHum then
+    fakeHum.PlatformStand = true
+    fakeHum.Health = 0
 end
 
-coroutine.wrap(function()
-    while true do game:GetService("RunService").RenderStepped:Wait()
-        if HumanDied then break end
-        if WDown then MoveClone(0, 0, 1e4) if walka.IsPlaying ~= true then walka:Play() end end
-        if ADown then MoveClone(1e4, 0, 0) if walka.IsPlaying ~= true then walka:Play() end end
-        if SDown then MoveClone(0, 0, -1e4) if walka.IsPlaying ~= true then walka:Play() end end
-        if DDown then MoveClone(-1e4, 0, 0) if walka.IsPlaying ~= true then walka:Play() end end
-        if SpaceDown then FakeCharacter["Humanoid"].Jump = true if jumpa.IsPlaying ~= true then jumpa:Play() end end
-        if WDown ~= true and ADown ~= true and SDown ~= true and DDown ~= true and SpaceDown ~= true then
-            walka:Stop()
-            FakeCharacter.Humanoid.WalkToPoint = FakeCharacter.HumanoidRootPart.Position end
-    end
-end)()
-p.CharacterAdded:Connect(function(char)
-    workspace.Camera.CameraSubject = FakeCharacter.Humanoid
-    char:WaitForChild("HumanoidRootPart")
-    char:WaitForChild("Head")
-    workspace.Camera.CameraSubject = FakeCharacter.Humanoid
-    wait(0.3)
-    hatdrop(char)
-    task.wait(0.4)
-    workspace.Camera.CameraSubject = FakeCharacter.Humanoid
-    for i, v in pairs(limbs) do
-        local name, cf = unpack(v)
-        if name == "" then continue end
-        coroutine.wrap(function()
-            local a = char:WaitForChild(name)
-            local s, e = pcall(function()
-                Align(a.Handle, FakeCharacter[i], cf)
-            end)
-            if not s then print(e) end
-        end)()
-    end
+-- Teleport the fake character back to the original position when necessary
+local velocityCon
+velocityCon = rs.PostSimulation:Connect(function()
+    removeVelocity(hrp)
+    hrp.CFrame = newPos
 end)
+
+task.spawn(createFlinger, faceAccessory)  -- Flings the "Face Behind Head_white"
+task.wait(0.33)
+velocityCon:Disconnect()
+velocityCon = nil
+
+-- Once the fake character has been created, you can simulate the collision behavior and other actions.
+task.wait(1) -- A slight delay to let things settle
+
+-- Replace original character
+local newChar = lp.CharacterAdded:Wait()
+local newHrp = newChar:WaitForChild("HumanoidRootPart")
+newHrp.CFrame = oldPos
