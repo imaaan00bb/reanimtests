@@ -3,9 +3,9 @@ r = math.rad
 limbs = {
     ["Left Arm"] = {"Extra Left hand (Blocky)_white",CFrame.Angles(0,0,r(90))},
     ["Right Arm"] = {"Extra Right hand (Blocky)_white",CFrame.Angles(0,0,r(90))},
-    ["Right Leg"] = {"Extra Right hand (Blocky)_white",CFrame.Angles(0,0,r(90))},
-    ["Left Leg"] = {"Extra Right hand (Blocky)_white",CFrame.Angles(0,0,r(90))},
-    ["Torso"] = {"Extra Right hand (Blocky)_white",CFrame.new(0,0,0)},
+    ["Right Leg"] = {"MeshPartAccessory",CFrame.Angles(0,0,r(90))},
+    ["Left Leg"] = {"Unloaded head",CFrame.Angles(0,0,r(90))},
+    ["Torso"] = {"Front",CFrame.new(0,0,0)},
     ["Head"] = {"Face Behind Head_white",CFrame.new(0,0,0)},
 }
 
