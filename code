@@ -1,11 +1,11 @@
 -- work in progresshjghjss 
 r = math.rad
 limbs = {
-    ["Left Arm"] = {"Accessory (Guest Left Arm)",CFrame.Angles(0,0,r(90))},
-    ["Right Arm"] = {"Accessory (Guest Right Arm)",CFrame.Angles(0,0,r(90))},
-    ["Right Leg"] = {"Accessory (right arm)",CFrame.Angles(0,0,r(90))},
-    ["Left Leg"] = {"Accessory (LLeg)",CFrame.Angles(0,0,r(90))},
-    ["Torso"] = {"Accessory (Guest Torso)",CFrame.new(0,0,0)},
+    ["Left Arm"] = {"Extra Left hand (Blocky)_white",CFrame.Angles(0,0,r(90))},
+    ["Right Arm"] = {"Extra Right hand (Blocky)_white",CFrame.Angles(0,0,r(90))},
+    ["Right Leg"] = {"Extra Right hand (Blocky)_white",CFrame.Angles(0,0,r(90))},
+    ["Left Leg"] = {"Extra Right hand (Blocky)_white",CFrame.Angles(0,0,r(90))},
+    ["Torso"] = {"Extra Right hand (Blocky)_white",CFrame.new(0,0,0)},
     ["Head"] = {"Face Behind Head_white",CFrame.new(0,0,0)},
 }
 
