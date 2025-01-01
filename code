@@ -7,11 +7,11 @@ getgenv().flingvelocity = Vector3.new(999999,999999,999999)
 getgenv().Accessories = {
 	-- Limb/Part name | {{Accessory name}, {offset}}
     -- each offset should correspond to each hat's index
-	["Left Arm"] = {{"Guest Left Arm"},{CFrame.Angles(0,0,math.rad(90))}},
-	["Right Arm"] = {{"Guest Right Arm"},{CFrame.Angles(0,0,-math.rad(90))}},
-	["Right Leg"] = {{"rightleg"},{CFrame.Angles(0,0,math.rad(0))}},
-	["Left Leg"] = {{"LLeg"},{CFrame.Angles(0,0,math.rad(0))}},
-	["Torso"] = {{"Guest Torso"},{CFrame.Angles(0,0,-math.rad(14))}},
+	["Left Arm"] = {{"Accessory (Guest Left Arm)"},{CFrame.Angles(0,0,math.rad(90))}},
+	["Right Arm"] = {{"Accessory (Guest Right Arm)"},{CFrame.Angles(0,0,-math.rad(90))}},
+	["Right Leg"] = {{"Accessory (rightleg)"},{CFrame.Angles(0,0,math.rad(0))}},
+	["Left Leg"] = {{"Accessory (LLeg)"},{CFrame.Angles(0,0,math.rad(0))}},
+	["Torso"] = {{"Accessory (Guest Torso)"},{CFrame.Angles(0,0,-math.rad(14))}},
 	["Head"] = {{"Face Behind Head_white"},{CFrame.new(0,0,0.2)}},
 	["FlingPart"] = {[3]=true} -- placeholder, will make use of this later
 }
